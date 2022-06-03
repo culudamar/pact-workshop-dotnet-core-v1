@@ -48,7 +48,7 @@ namespace provider.Controllers
                 return NotFound();
             }
 
-            return new JsonResult(iskiFaturalari);
+            return Ok(iskiFaturalari);
         }
     }
 }
