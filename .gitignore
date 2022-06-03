@@ -1,3 +1,6 @@
 .vscode/
 bin/
 obj/
+/Akbank Pact/.vs/Akbank Pact/FileContentIndex
+/Akbank Pact/.vs/ProjectEvaluation
+*.bin

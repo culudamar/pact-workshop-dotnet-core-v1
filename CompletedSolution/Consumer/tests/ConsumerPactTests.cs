@@ -4,6 +4,7 @@ using PactNet.Mocks.MockHttpService;
 using PactNet.Mocks.MockHttpService.Models;
 using Consumer;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace tests
 {
@@ -19,16 +20,16 @@ namespace tests
             _mockProviderServiceBaseUri = fixture.MockProviderServiceBaseUri;
         }
 
-        readonly List<object> faturalar = new List<object>()
-        {
-            new { mbb = 123, kurum = "ISKI", sonOdemeTarihi = "1.1.2022", faturaNo = "ngut12" },
-            new { mbb = 123, kurum = "Ayedas", sonOdemeTarihi = "1.2.2022", faturaNo = "te53bd" },
-        };
-
         [Fact]
         public void MBBninTumFaturalariDonuyor()
         {
             var mbb = "123";
+
+            var faturalar = new List<Fatura>()
+            {
+                new Fatura{ mbb = 123, kurum = "ISKI", sonOdemeTarihi = "1.1.2022", faturaNo = "ngut12" },
+                new Fatura{ mbb = 123, kurum = "Ayedas", sonOdemeTarihi = "1.2.2022", faturaNo = "te53bd" },
+            };
 
             // Arrange
             _mockProviderService.Given("There is data")
@@ -53,10 +54,10 @@ namespace tests
             // Act
             var result = ConsumerApiClient.FaturaOku(mbb, _mockProviderServiceBaseUri).GetAwaiter().GetResult();
             var resultBody = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            var servistenGelenFaturalar = JsonConvert.DeserializeObject<List<Fatura>>(resultBody);
 
-            // TODO: Assert
-            // Assert.Contains(expectedDateParsed, resultBody);
-            Console.WriteLine("Mock servis tum faturalar: " + resultBody);
+            // Assert
+            Assert.Equal(faturalar, servistenGelenFaturalar);
         }
 
         [Fact]
@@ -64,9 +65,9 @@ namespace tests
         {
             var mbb = "123";
             var kurum = "ISKI";
-            var iskiFaturasi = new List<object>()
+            var iskiFaturalari = new List<Fatura>()
             {
-                new { mbb = 123, kurum = "ISKI", sonOdemeTarihi = "1.1.2022", faturaNo = "ngut12" },
+                new Fatura { mbb = 123, kurum = "ISKI", sonOdemeTarihi = "1.1.2022", faturaNo = "ngut12" },
             };
 
             // Arrange
@@ -86,16 +87,48 @@ namespace tests
                                     {
                                         { "Content-Type", "application/json; charset=utf-8" }
                                     },
-                                    Body = iskiFaturasi
+                                    Body = iskiFaturalari
                                 });
 
             // Act
             var result = ConsumerApiClient.FaturaOku(mbb, kurum, _mockProviderServiceBaseUri).GetAwaiter().GetResult();
             var resultBody = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            var servistenGelenFaturalar = JsonConvert.DeserializeObject<List<Fatura>>(resultBody);
 
-            // TODO Assert
-            // Assert.Contains(expectedDateParsed, resultBody);
-            Console.WriteLine("Mock servis spesifik fatura: " + resultBody);
+            // Assert
+            Assert.Equal(iskiFaturalari, servistenGelenFaturalar);
+        }
+        public class Fatura
+        {
+            public int mbb { get; set; }
+            public string kurum { get; set; }
+            public string sonOdemeTarihi { get; set; }
+            public string faturaNo { get; set; }
+
+            // override object.Equals
+            public override bool Equals(object obj)
+            {
+                //       
+                // See the full list of guidelines at
+                //   http://go.microsoft.com/fwlink/?LinkID=85237  
+                // and also the guidance for operator== at
+                //   http://go.microsoft.com/fwlink/?LinkId=85238
+                //
+
+                if (obj == null || GetType() != obj.GetType())
+                {
+                    return false;
+                }
+
+                var f = obj as Fatura;
+                return mbb.Equals(f.mbb) && faturaNo.Equals(f.faturaNo) && kurum.Equals(f.kurum) && sonOdemeTarihi.Equals(f.sonOdemeTarihi);
+            }
+
+            // override object.GetHashCode
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
+            }
         }
     }
 }
