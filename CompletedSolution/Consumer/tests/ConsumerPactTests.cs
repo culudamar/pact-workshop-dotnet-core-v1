@@ -19,130 +19,83 @@ namespace tests
             _mockProviderServiceBaseUri = fixture.MockProviderServiceBaseUri;
         }
 
-        [Fact]
-        public void ItHandlesInvalidDateParam()
+        readonly List<object> faturalar = new List<object>()
         {
-            // Arange
-            var invalidRequestMessage = "validDateTime is not a date or time";
-            _mockProviderService.Given("There is data")
-                                .UponReceiving("A invalid GET request for Date Validation with invalid date parameter")
-                                .With(new ProviderServiceRequest 
-                                {
-                                    Method = HttpVerb.Get,
-                                    Path = "/api/provider",
-                                    Query = "validDateTime=lolz"
-                                })
-                                .WillRespondWith(new ProviderServiceResponse {
-                                    Status = 400,
-                                    Headers = new Dictionary<string, object>
-                                    {
-                                        { "Content-Type", "application/json; charset=utf-8" }
-                                    },
-                                    Body = new 
-                                    {
-                                        message = invalidRequestMessage
-                                    }
-                                });
-
-            // Act
-            var result = ConsumerApiClient.ValidateDateTimeUsingProviderApi("lolz", _mockProviderServiceBaseUri).GetAwaiter().GetResult();
-            var resultBodyText = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-            // Assert
-            Assert.Contains(invalidRequestMessage, resultBodyText);
-        }
+            new { mbb = 123, kurum = "ISKI", sonOdemeTarihi = "1.1.2022", faturaNo = "ngut12" },
+            new { mbb = 123, kurum = "Ayedas", sonOdemeTarihi = "1.2.2022", faturaNo = "te53bd" },
+        };
 
         [Fact]
-        public void ItHandlesEmptyDateParam()
+        public void MBBninTumFaturalariDonuyor()
         {
-            // Arrange
-            var invalidRequestMessage = "validDateTime is required";
-            _mockProviderService.Given("There is data")
-                                .UponReceiving("A invalid GET request for Date Validation with empty string date parameter")
-                                .With(new ProviderServiceRequest 
-                                {
-                                    Method = HttpVerb.Get,
-                                    Path = "/api/provider",
-                                    Query = "validDateTime="
-                                })
-                                .WillRespondWith(new ProviderServiceResponse {
-                                    Status = 400,
-                                    Headers = new Dictionary<string, object>
-                                    {
-                                        { "Content-Type", "application/json; charset=utf-8" }
-                                    },
-                                    Body = new 
-                                    {
-                                        message = invalidRequestMessage
-                                    }
-                                });
-
-            // Act
-            var result = ConsumerApiClient.ValidateDateTimeUsingProviderApi(String.Empty, _mockProviderServiceBaseUri).GetAwaiter().GetResult();
-            var resultBodyText = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-            // Assert
-            Assert.Contains(invalidRequestMessage, resultBodyText);
-        }
-
-        [Fact]
-        public void ItHandlesNoData()
-        {
-            // Arrange
-            _mockProviderService.Given("There is no data")
-                                .UponReceiving("A valid GET request for Date Validation")
-                                .With(new ProviderServiceRequest 
-                                {
-                                    Method = HttpVerb.Get,
-                                    Path = "/api/provider",
-                                    Query = "validDateTime=04/04/2018"
-                                })
-                                .WillRespondWith(new ProviderServiceResponse {
-                                    Status = 404
-                                });
-
-            // Act
-            var result = ConsumerApiClient.ValidateDateTimeUsingProviderApi("04/04/2018", _mockProviderServiceBaseUri).GetAwaiter().GetResult();
-            var resultStatus = (int)result.StatusCode;
-
-            // Assert
-            Assert.Equal(404, resultStatus);
-        }
-
-        [Fact]
-        public void ItParsesADateCorrectly()
-        {
-            var expectedDateString = "04/05/2018";
-            var expectedDateParsed = DateTime.Parse(expectedDateString).ToString("dd-MM-yyyy HH:mm:ss");
+            var mbb = "123";
 
             // Arrange
             _mockProviderService.Given("There is data")
-                                .UponReceiving("A valid GET request for Date Validation")
-                                .With(new ProviderServiceRequest 
+                                .UponReceiving("GET MBB'nin tum faturalari")
+                                .With(new ProviderServiceRequest
                                 {
                                     Method = HttpVerb.Get,
-                                    Path = "/api/provider",
-                                    Query = $"validDateTime={expectedDateString}"
+                                    Path = $"/api/fatura"
+                                    ,
+                                    Query = $"mbb={mbb}"
                                 })
-                                .WillRespondWith(new ProviderServiceResponse {
+                                .WillRespondWith(new ProviderServiceResponse
+                                {
                                     Status = 200,
                                     Headers = new Dictionary<string, object>
                                     {
                                         { "Content-Type", "application/json; charset=utf-8" }
                                     },
-                                    Body = new 
-                                    {
-                                        test = "NO",
-                                        validDateTime = expectedDateParsed
-                                    }
+                                    Body = faturalar
                                 });
 
             // Act
-            var result = ConsumerApiClient.ValidateDateTimeUsingProviderApi(expectedDateString, _mockProviderServiceBaseUri).GetAwaiter().GetResult();
+            var result = ConsumerApiClient.FaturaOku(mbb, _mockProviderServiceBaseUri).GetAwaiter().GetResult();
             var resultBody = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
 
-            // Assert
-            Assert.Contains(expectedDateParsed, resultBody);
+            // TODO: Assert
+            // Assert.Contains(expectedDateParsed, resultBody);
+            Console.WriteLine("Mock servis tum faturalar: " + resultBody);
+        }
+
+        [Fact]
+        public void MBBninSpesifikFaturasiDonuyor()
+        {
+            var mbb = "123";
+            var kurum = "ISKI";
+            var iskiFaturasi = new List<object>()
+            {
+                new { mbb = 123, kurum = "ISKI", sonOdemeTarihi = "1.1.2022", faturaNo = "ngut12" },
+            };
+
+            // Arrange
+            _mockProviderService.Given("There is data")
+                                .UponReceiving("GET MBB'nin spesifik faturasi")
+                                .With(new ProviderServiceRequest
+                                {
+                                    Method = HttpVerb.Get,
+                                    Path = $"/api/fatura"
+                                    ,
+                                    Query = $"mbb={mbb}&kurum={kurum}"
+                                })
+                                .WillRespondWith(new ProviderServiceResponse
+                                {
+                                    Status = 200,
+                                    Headers = new Dictionary<string, object>
+                                    {
+                                        { "Content-Type", "application/json; charset=utf-8" }
+                                    },
+                                    Body = iskiFaturasi
+                                });
+
+            // Act
+            var result = ConsumerApiClient.FaturaOku(mbb, kurum, _mockProviderServiceBaseUri).GetAwaiter().GetResult();
+            var resultBody = result.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+            // TODO Assert
+            // Assert.Contains(expectedDateParsed, resultBody);
+            Console.WriteLine("Mock servis spesifik fatura: " + resultBody);
         }
     }
 }
