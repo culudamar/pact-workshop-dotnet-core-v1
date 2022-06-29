@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using tests.Middleware;
 using Microsoft.AspNetCore.Hosting;
+using provider.Models;
+using tests.Models;
 
 namespace tests
 {
@@ -19,6 +21,7 @@ namespace tests
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IFaturaOkuyucu, TestFaturaOkuyucu>();
             services.AddMvc();
         }
 

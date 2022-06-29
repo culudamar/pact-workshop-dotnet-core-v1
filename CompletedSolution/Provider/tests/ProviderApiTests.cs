@@ -14,7 +14,8 @@ namespace tests
     {
         private string _providerUri { get; }
         private string _pactServiceUri { get; }
-        private IWebHost _webHost { get; }
+        private IWebHost _webHostPact { get; }
+        private IWebHost _webHostProvider { get; }
         private ITestOutputHelper _outputHelper { get; }
 
         public ProviderApiTests(ITestOutputHelper output)
@@ -23,12 +24,19 @@ namespace tests
             _providerUri = "http://localhost:9000";
             _pactServiceUri = "http://localhost:9001";
 
-            _webHost = WebHost.CreateDefaultBuilder()
+            _webHostPact = WebHost.CreateDefaultBuilder()
                 .UseUrls(_pactServiceUri)
                 .UseStartup<TestStartup>()
                 .Build();
 
-            _webHost.Start();
+            _webHostPact.Start();
+
+            _webHostProvider = WebHost.CreateDefaultBuilder()
+                .UseUrls(_providerUri)
+                .UseStartup<TestStartup>()
+                .Build();
+
+            _webHostProvider.Start();
         }
 
         [Fact]
@@ -68,8 +76,10 @@ namespace tests
             {
                 if (disposing)
                 {
-                    _webHost.StopAsync().GetAwaiter().GetResult();
-                    _webHost.Dispose();
+                    _webHostPact.StopAsync().GetAwaiter().GetResult();
+                    _webHostPact.Dispose();
+                    _webHostProvider.StopAsync().GetAwaiter().GetResult();
+                    _webHostProvider.Dispose();
                 }
 
                 disposedValue = true;
